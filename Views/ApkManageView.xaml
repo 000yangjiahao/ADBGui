@@ -1,0 +1,18 @@
+﻿<Window x:Class="ADBGui.Views.ApkManageView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ADBGui.Views"
+        mc:Ignorable="d"
+        Title="ApkManageView" Height="400" Width="600">
+    <Grid>
+        <TextBlock HorizontalAlignment="Left" Margin="10,80,0,0" TextWrapping="Wrap" Text="请输入下载Apk的路径" FontSize="15" VerticalAlignment="Top" Height="37" Width="165"/>
+        <TextBox HorizontalAlignment="Left" Margin="180,80,0,0" TextWrapping="Wrap" Text="{Binding FilePath,Mode=TwoWay}" FontSize="20" VerticalAlignment="Top" Width="371" Height="37"/>
+        <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="请输入需要卸载的包名" FontSize="15" VerticalAlignment="Top" Margin="10,227,0,0" Height="37" Width="165"/>
+        <TextBox HorizontalAlignment="Left" Margin="180,227,0,0" TextWrapping="Wrap" Text="{Binding PackageName,Mode=TwoWay}" FontSize="20" VerticalAlignment="Top" Width="313" Height="37"/>
+        <Button x:Name="Install" Content="下载" FontSize="20" HorizontalAlignment="Left" Margin="203,134,0,0" VerticalAlignment="Top" Height="35" Width="134"/>
+        <Button x:Name="Uninstall" Content="卸载" FontSize="20" HorizontalAlignment="Left" Margin="203,304,0,0" VerticalAlignment="Top" Height="35" Width="134"/>
+
+    </Grid>
+</Window>
