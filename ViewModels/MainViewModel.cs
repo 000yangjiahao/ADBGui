@@ -179,5 +179,9 @@ namespace ADBGui.ViewModels
         {
             return _windowManager.ShowDialogAsync(IoC.Get<LogViewModel>());
         }
+        public Task BrowseContents()
+        {
+            return _windowManager.ShowDialogAsync(IoC.Get<CatalogViewModel>());
+        }
     }
 }

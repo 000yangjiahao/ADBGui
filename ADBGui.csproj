@@ -79,8 +79,11 @@
     </Compile>
     <Compile Include="Bootstrapper.cs" />
     <Compile Include="Models\ApkInfoModel.cs" />
+    <Compile Include="Models\FilesModel.cs" />
     <Compile Include="Models\DeviceInfoModel.cs" />
     <Compile Include="Models\FileTransferModel.cs" />
+    <Compile Include="Models\FoldersModel.cs" />
+    <Compile Include="TreeViewNode.cs" />
     <Compile Include="ViewModels\ApkManageViewModel.cs" />
     <Compile Include="ViewModels\CatalogViewModel.cs" />
     <Compile Include="ViewModels\FileManageViewModel.cs" />
