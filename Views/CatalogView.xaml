@@ -6,20 +6,15 @@
         xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:cal="http://www.caliburnproject.org"
         xmlns:local="clr-namespace:ADBGui.Views"
-        xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
         mc:Ignorable="d"
         Title="CatalogView" Height="450" Width="800">
     <Grid>
-        <!-- 使用TreeView显示文件夹列表 -->
-        
-
-        <ListView Name="FileListView" Grid.Column="1" Grid.Row="0" ItemsSource="{Binding Files}">
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn Header="File Name" Width="200" DisplayMemberBinding="{Binding FileName}" />
-                </GridView>
-            </ListView.View>
-        </ListView>
-
+        <TreeView ItemsSource="{Binding RootFolders}" TreeViewItem.Expanded="TreeViewItem_Expanded">
+            <TreeView.ItemTemplate>
+                <HierarchicalDataTemplate ItemsSource="{Binding Subfolders}">
+                    <TextBlock Text="{Binding Name}" />
+                </HierarchicalDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
     </Grid>
 </Window>

@@ -23,5 +23,6 @@ namespace ADBGui.Views
         {
             InitializeComponent();
         }
+
     }
 }

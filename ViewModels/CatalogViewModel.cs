@@ -11,166 +11,65 @@ using System.IO;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
+using static System.Net.WebRequestMethods;
+using System.Text.RegularExpressions;
 
 namespace ADBGui.ViewModels
 {
     public class CatalogViewModel : Conductor<object>
     {
-        private string _fileName;
-        private string _folderName;
-        private string result;
-        private ObservableCollection<FilesModel> _files = new ObservableCollection<FilesModel>();
-        private ObservableCollection<FoldersModel> _folders = new ObservableCollection<FoldersModel>();
-        public static string relativePath = @"..\..\ADB\platform-tools\adb.exe";
-        string adbPath = Path.Combine(Environment.CurrentDirectory, relativePath);
-        private TreeViewNode _selectedNode;
-        private ObservableCollection<TreeViewNode> _treeViewNodes = new ObservableCollection<TreeViewNode>();
-        private TreeViewNode _rootNode = new TreeViewNode { Text = "sdcard", FullPath = "/sdcard/" };
-
-        public string FileName
-        {
-            get { return _fileName; }
-            set { _fileName = value; NotifyOfPropertyChange(nameof(FileName)); }
-        }
-        public string FolderName
-        {
-            get { return _folderName; }
-            set { _folderName = value; NotifyOfPropertyChange(nameof(FolderName)); }
-        }
-        public ObservableCollection<FoldersModel> Folders
-        {
-            get { return _folders; }
-            set { _folders = value; NotifyOfPropertyChange(nameof(Folders)); }
-        }
-        public ObservableCollection<FilesModel> Files
-        {
-            get { return _files; }
-            set { _files = value; NotifyOfPropertyChange(nameof(Files)); }
-        }
-        public TreeViewNode SelectedNode
-        {
-            get { return _selectedNode; }
-            set
-            {
-                _selectedNode = value;
-                NotifyOfPropertyChange(() => SelectedNode);
-                if (_selectedNode != null)
-                {
-                    UpdateFilesList(_selectedNode.FullPath);
-                }
-            }
-        }
-        public TreeViewNode RootNode
-        {
-            get { return _rootNode; }
-            set { _rootNode = value; NotifyOfPropertyChange(nameof(RootNode)); }
-        }
-        public ObservableCollection<TreeViewNode> TreeViewNodes
-        {
-            get { return _treeViewNodes; }
-            set { _treeViewNodes = value; NotifyOfPropertyChange(() => TreeViewNodes); }
-        }
-
+        public ObservableCollection<FoldersModel> RootFolders { get; } = new ObservableCollection<FoldersModel>();
         public CatalogViewModel()
         {
-            InitializeFolders();
+            string sdCardRoot = "/sdcard";
+            RootFolders.Add(CreateFolderItem(sdCardRoot));
+        }
+        private FoldersModel CreateFolderItem(string folderPath)
+        {
+            FoldersModel item = new FoldersModel();
+            item.Name = System.IO.Path.GetFileName(folderPath);
+            item.Path = folderPath;
+            item.Subfolders.Add(new FoldersModel { Name = "Loading..." });
+            return item;
         }
 
-        public void TreeNodeSelected(object selectedNode)
+        public void TreeViewItem_Expanded(object sender, RoutedEventArgs e)
         {
-            // 处理节点选择的逻辑
-            TreeViewNode selectedTreeNode = selectedNode as TreeViewNode;
-            if (selectedTreeNode != null)
+            TreeViewItem item = e.OriginalSource as TreeViewItem;
+            if (item != null)
             {
-                // 在这里处理选择节点后的操作，例如更新文件列表
-                string selectedFolderPath = selectedTreeNode.FullPath;
-                UpdateFilesList(selectedFolderPath);
-            }
-        }
-        private void InitializeFolders()
-        {
-            ExecuteADBCommand("shell ls -d /sdcard/*/");
-
-            RootNode.Text = "sdcard"; // 设置根节点的名称
-
-            foreach (var folder in Folders)
-            {
-                TreeViewNode subNode = new TreeViewNode();
-                subNode.Text = folder.FolderName;
-                RootNode.Nodes.Add(subNode);
-            }
-
-            // 将根节点添加到 TreeViewNodes 集合中
-            TreeViewNodes.Add(RootNode);
-
-            // 默认选中根节点
-            SelectedNode = RootNode;
-        }
-
-        private void UpdateFilesList(string folderPath)
-        {
-            ExecuteADBCommand($"shell ls -l {folderPath}");
-        }
-
-        private void ExecuteADBCommand(string adbCommand)
-        {
-            try
-            {
-                ProcessStartInfo processStartInfo = new ProcessStartInfo
+                FoldersModel folderItem = item.DataContext as FoldersModel;
+                if (folderItem != null && folderItem.Subfolders.Count == 1 && folderItem.Subfolders[0].Name == "Loading...")
                 {
-                    FileName = adbPath,
-                    Arguments = adbCommand,
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                };
-                using (Process process = new Process())
-                {
-                    process.StartInfo = processStartInfo;
-                    process.Start();
-                    result = process.StandardOutput.ReadToEnd();
-                    process.WaitForExit();
-                    process.Close();
+                    folderItem.Subfolders.Clear();
+                    folderItem.Path = System.IO.Path.Combine(folderItem.Path.Replace('\\', '/'));
+                    LoadFolderContents(folderItem);
                 }
-                ParseADBResult(result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
             }
         }
 
-        private void ParseADBResult(string result)
+        private void LoadFolderContents(FoldersModel parentFolder)
         {
-            var lines = result.Split('\n').Select(line => line.Trim()).ToList();
+            Process process = new Process();
+            process.StartInfo.FileName = @"C:\Users\xiaolongxia\Desktop\C# windows开发\ADBGui\ADB\platform-tools\adb.exe";
+            process.StartInfo.Arguments = $"shell ls {parentFolder.Path}";
+            process.StartInfo.UseShellExecute = false;
+            process.StartInfo.RedirectStandardOutput = true;
+            process.StartInfo.CreateNoWindow = true;
+            process.Start();
 
-            Folders.Clear();
-            Files.Clear();
+            string output = process.StandardOutput.ReadToEnd();
+            process.WaitForExit();
 
-            foreach (var line in lines)
+            string[] folderNames = output.Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (string folderName in folderNames)
             {
-                if (!string.IsNullOrEmpty(line))
+                if (!folderName.StartsWith(".") && !folderName.StartsWith(".."))
                 {
-                    bool isDirectory = line.EndsWith("/");
-                    bool isFile = line.Contains(".");
-                    if (isDirectory)
-                    {
-                        int lastSlashIndex = line.LastIndexOf('/');
-                        if (lastSlashIndex >= 0)
-                        {
-                            int secondLastSlashIndex = line.LastIndexOf('/', lastSlashIndex - 1);
-                            if (secondLastSlashIndex >= 0)
-                            {
-                                string folderName = line.Substring(secondLastSlashIndex + 1, lastSlashIndex - secondLastSlashIndex - 1);
-                                Folders.Add(new FoldersModel() { FolderName=folderName });
-                            }
-                        }
-                    }
-                    else if(isFile)
-                    {
-                        int lastSlashIndex = line.LastIndexOf('/');
-                        string fileName = line.Substring(lastSlashIndex + 1, line.Length);
-                        Files.Add(new FilesModel() { FileName=fileName });
-                    }
+                    string fullPath = System.IO.Path.Combine(parentFolder.Path, folderName);
+                    FoldersModel folderItem = CreateFolderItem(fullPath);
+                    parentFolder.Subfolders.Add(folderItem);
                 }
             }
         }
